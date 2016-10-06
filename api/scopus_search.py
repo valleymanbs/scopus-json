@@ -13,7 +13,7 @@ class ScopusSearch(object):
     """
     Class implementation to GET data from the ScopusSearch API.
 
-    When initialized, searches the given query using the ScopusSearch API and saves received JSON at folder data/search.
+    When initialized, retrieves an abstracts list for the given query and saves JSON data at folder {cwd}/data/search
 
     Also fills a list of EIDs and a dictionary of {'EID' : [Authors list]}
 
@@ -23,7 +23,7 @@ class ScopusSearch(object):
     To get some fields you need COMPLETE view. You need a subscriber APIKey to get a complete view.
     Non-paying users only get a STANDARD view, so you can get errors on requesting some fields when not a subscriber.
 
-    Check the fields you can get from the API at: http://api.elsevier.com/documentation/search/SCOPUSSearchViews.htm
+    Check the fields you can get at: http://api.elsevier.com/documentation/search/SCOPUSSearchViews.htm
 
 
     :param query: the Scopus Search query
@@ -68,7 +68,7 @@ class ScopusSearch(object):
         JSON_DATA_FILE = os.path.join(QUERY_DIR, 'articles.json')
 
         self._JSON = []
-        json_loaded = False
+        self._json_loaded = False
 
         if not os.path.exists(QUERY_DIR):
             os.makedirs(QUERY_DIR)
@@ -77,7 +77,7 @@ class ScopusSearch(object):
             print ('This query has already been cached in the data directory. Loading json from file \n\t{}\n'.format(JSON_DATA_FILE))
             with open(JSON_DATA_FILE) as d:
                 self._JSON = json.load(d)
-            json_loaded = True
+            self._json_loaded = True
 
         # check if items_per_query is ok for the current request:
         # complete view max 100 items per query
@@ -97,7 +97,7 @@ class ScopusSearch(object):
         self._found_items_num = 1
         self._eid_list = []
         self._eid_authors_dict = {}
-        if not json_loaded:
+        if not self._json_loaded:
             while self._found_items_num > 0:
 
                 # view or fields search selection
@@ -132,6 +132,7 @@ class ScopusSearch(object):
                     with open(out_file, 'w') as f:
                         json.dump(resp.json(), f, indent=4)
                         f.close()
+                    print ('Stored JSON file for this response.')
 
                     # check if results number exceed the given limit
                     if self._found_items_num > self._max_items:
@@ -140,9 +141,9 @@ class ScopusSearch(object):
 
                     # check if returned some result
                     if 'entry' in resp.json().get('search-results', []):
-                        # add it to this json file
+                        # add it to this json file - combination of all "entry" fields from the json payloads
                         self._JSON += resp.json()['search-results']['entry']
-                    print ('Stored last call JSON data.')
+
 
                 # set counters for the next cycle
                 self._found_items_num -= self._items_per_query
@@ -151,7 +152,7 @@ class ScopusSearch(object):
 
             # end while - finished downloading JSON data
 
-            # write fetched JSON to a file
+            # write abstracts JSON to a file - combination of all "entry" fields from the json payloads got from API
             with open(JSON_DATA_FILE, 'w') as f:
                 json.dump(self._JSON, f, indent=4)
                 f.close()
@@ -177,6 +178,7 @@ class ScopusSearch(object):
         #             f.write('{}\n'.format(eid.encode('utf-8')))
         #
         # print ('{} EIDs stored in file \n\t{}\n'.format(len(self._eid_list), out_file))
+
     # end __init__
 
     @property
@@ -191,7 +193,7 @@ class ScopusSearch(object):
 
     @property
     def json_response(self):
-        """Return list of Authors retrieved."""
+        """Return JSON data."""
         return self._JSON
 
 
