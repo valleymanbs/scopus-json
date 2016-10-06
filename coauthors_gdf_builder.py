@@ -18,6 +18,7 @@ s = ScopusSearch(query=q,
                  #fields='eid,author,dc:description,dc:title'
                  view='COMPLETE'
                  )
+
 nodes = []
 edges = {}
 
