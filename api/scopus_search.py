@@ -97,6 +97,9 @@ class ScopusSearch(object):
         self._found_items_num = 1
         self._eid_list = []
         self._eid_authors_dict = {}
+        self._affil_dict = {}
+        self._author_dict = {}
+
         if not self._json_loaded:
             while self._found_items_num > 0:
 
@@ -166,6 +169,22 @@ class ScopusSearch(object):
                 self._eid_authors_dict[str(e['eid'])] = set([str(i['authid']) for i in e['author']])
             else:
                 print('WARNING: skipped an element, no eid or author. JSON data was: \n{}\n'.format(e))
+            if 'affiliation' in e :
+                for i in e['affiliation']:
+                    if i['affilname'] is None:
+                        i['affilname'] = 'Null'
+                    if i['affiliation-city'] is None:
+                        i['affiliation-city'] = 'Null'
+                    else:
+                        self._affil_dict[str(i['afid'])] = [ i['affilname'], i['affiliation-city'] ]
+            if 'author' in e:
+                for i in e['author']:
+                    if 'afid' in i :
+                        # tenere solo ultimo della lista? current affiliation
+                        self._author_dict[i['authid']] = set([z['$'] for z in i['afid']])
+                    else:
+                        self._author_dict[i['authid']] = ['Null']
+
 
         # # dump the list to a file, one EID per line
         # out_file = os.path.join(QUERY_DIR,'_EIDS.txt')

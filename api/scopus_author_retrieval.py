@@ -32,7 +32,7 @@ class ScopusAuthorRetrieval(object):
     :type view: str or unicode
     """
 
-    def __init__(self, eid, fields=None, view=None):
+    def __init__(self, authid, fields=None, view=None):
 
         print 'ScopusAuthorRetrieval class initialization'
 
@@ -53,8 +53,8 @@ class ScopusAuthorRetrieval(object):
         print ('Abstract data directory found at \n\t{}\n'.format(SCOPUS_AUTHOR_DIR))
 
         # attributes declaration
-        self._url = ("http://api.elsevier.com/content/author/eid/" + eid)
-        self._EID = eid
+        self._url = ("http://api.elsevier.com/content/author/author_id/" + authid)
+        self._EID = authid
         self._JSON = []
         self._json_loaded = False
 
@@ -94,6 +94,8 @@ class ScopusAuthorRetrieval(object):
                                     )
 
             print ('Current query url:\n\t{}\n'.format(resp.url))
+
+            #print(resp)
 
             if resp.status_code != 200:
                 # error
