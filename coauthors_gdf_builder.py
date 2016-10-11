@@ -5,6 +5,7 @@ import os
 import sys
 import time
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("keys", help='search keys surrounded by quotation marks, e.g. \'neural network\'')
 parser.add_argument("year", help='Starting year, e.g. 2016')
@@ -18,6 +19,7 @@ s = ScopusSearch(query=q,
                  #fields='eid,author,dc:description,dc:title'
                  view='COMPLETE'
                  )
+
 
 nodes = []
 edges = {}
@@ -42,6 +44,8 @@ if not os.path.exists(QUERY_DIR):
 out_file = os.path.join(QUERY_DIR, '{}.gdf'.format(time.strftime("%d%m%Y_%H%M%S")))
 
 
+
+
 with open(out_file, 'w') as f:
     # nodes header
     if sys.version_info[0] == 3:
@@ -51,9 +55,9 @@ with open(out_file, 'w') as f:
     # nodes list
     for a in nodes:
         if sys.version_info[0] == 3:
-            f.write('{},{}\n'.format(a,a))
+            f.write('{},{}\n'.format(a, s.authors_dict[a]))
         else:
-            f.write('{},{}\n'.format(a.encode('utf-8'),a.encode('utf-8')))
+            f.write('{},{}\n'.format(a.encode('utf-8'), s.authors_dict[a]))
     # edges header
     if sys.version_info[0] == 3:
         f.write('edgedef>node1 VARCHAR,node2 VARCHAR,label VARCHAR\n')

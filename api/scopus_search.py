@@ -2,8 +2,15 @@ import requests
 # import sys
 import os
 import json
-from itertools import cycle
 
+
+
+
+def get_next_element(my_itr):
+    try:
+        return my_itr.next()
+    except StopIteration:
+        return None
 
 
 from api_key import MY_API_KEY
@@ -148,6 +155,8 @@ class ScopusSearch(object):
                     if 'entry' in resp.json().get('search-results', []):
                         # add it to this json file - combination of all "entry" fields from the json payloads
                         self._JSON += resp.json()['search-results']['entry']
+                        print '####'
+                        print type(resp.json()['search-results']['entry'])
 
 
                 # set counters for the next cycle
@@ -170,19 +179,23 @@ class ScopusSearch(object):
             else:
                 i += 1
 
-            #for a in e['author']
+
         print 'dopo {}'.format(len(self._JSON))
 
         self._JSON2 = []
 
         for e in self._JSON:
+
+
             for a in e['author']:
                 temp = e
 
                 temp['author'] = a
-                print temp
-                self._JSON2.append(temp)
-        #print self._JSON2
+                string = json.dumps(temp)
+
+                self._JSON2.append(json.loads(string))
+
+        print json.dumps(self._JSON2)
 
 
         JSON_DATA_FILE2 = os.path.join(QUERY_DIR, 'articles2.json')
@@ -192,46 +205,66 @@ class ScopusSearch(object):
             json.dump(self._JSON2, f, indent=4)
             f.close()
 
-        self._JSON3 = []
-
-        for e in self._JSON2:
-           if
-                self._JSON3.append(temp)
-        # print self._JSON2
 
 
-        JSON_DATA_FILE3 = os.path.join(QUERY_DIR, 'articles2.json')
+        i = 0
+        while i < len(self._JSON2):
+            if self._JSON2[i] == self._JSON2[(i+1)%len(self._JSON2)]:
+                print 'same {}'.format(i)
+                self._JSON2.pop(i)
+            else:
+                i += 1
+
+
+        JSON_DATA_FILE3 = os.path.join(QUERY_DIR, 'articles3.json')
 
         with open(JSON_DATA_FILE3, 'w') as f:
-            json.dump(self._JSON3, f, indent=4)
+            json.dump(self._JSON2, f, indent=4)
+            f.close()
+
+        for e in self._JSON2:
+
+            e['author']['afid'] = e['author']['afid'][-1]['$']
+
+            for z in e['affiliation']:
+
+
+                if z['afid'] != e['author']['afid']:
+                    e['affiliation'].remove(z)
+            print e['affiliation']
+            e['affiliation'] = e['affiliation'][0]
+
+        JSON_DATA_FILE4 = os.path.join(QUERY_DIR, 'articles4.json')
+        with open(JSON_DATA_FILE4, 'w') as f:
+            json.dump(self._JSON2, f, indent=4)
             f.close()
 
 
-        for e in self._JSON:
-            if 'eid' in e:
-                self._eid_list += [str(e['eid'])]
-            else:
-                print('WARNING: skipped an element, no eid. JSON data was: \n{}\n'.format(e))
-            if 'author' in e and 'eid' in e:
-                #self._eid_authors_dict[str(e['eid'])] = set([str(i['authid']) for i in e['author']])
-                pass
-            else:
-                print('WARNING: skipped an element, no eid or author. JSON data was: \n{}\n'.format(e))
-            if 'affiliation' in e :
-                for i in e['affiliation']:
-                    if i['affilname'] is None:
-                        i['affilname'] = 'Null'
-                    if i['affiliation-city'] is None:
-                        i['affiliation-city'] = 'Null'
-                    else:
-                        self._affil_dict[str(i['afid'])] = [ i['affilname'], i['affiliation-city'] ]
-            if 'author' in e:
-                for i in e['author']:
-                    if 'afid' in i :
-                        # tenere solo ultimo della lista? current affiliation
-                        self._author_dict[i['authid']] = set([z['$'] for z in i['afid']])
-                    else:
-                        self._author_dict[i['authid']] = ['Null']
+        # for e in self._JSON:
+        #     if 'eid' in e:
+        #         self._eid_list += [str(e['eid'])]
+        #     else:
+        #         print('WARNING: skipped an element, no eid. JSON data was: \n{}\n'.format(e))
+        #     if 'author' in e and 'eid' in e:
+        #         #self._eid_authors_dict[str(e['eid'])] = set([str(i['authid']) for i in e['author']])
+        #         pass
+        #     else:
+        #         print('WARNING: skipped an element, no eid or author. JSON data was: \n{}\n'.format(e))
+        #     if 'affiliation' in e :
+        #         for i in e['affiliation']:
+        #             if i['affilname'] is None:
+        #                 i['affilname'] = 'Null'
+        #             if i['affiliation-city'] is None:
+        #                 i['affiliation-city'] = 'Null'
+        #             else:
+        #                 self._affil_dict[str(i['afid'])] = [ i['affilname'], i['affiliation-city'] ]
+        #     if 'author' in e:
+        #         for i in e['author']:
+        #             if 'afid' in i :
+        #                 # tenere solo ultimo della lista? current affiliation
+        #                 self._author_dict[i['authid']] = set([z['$'] for z in i['afid']])
+        #             else:
+        #                 self._author_dict[i['authid']] = ['Null']
 
 
         # # dump the list to a file, one EID per line
@@ -266,6 +299,6 @@ class ScopusSearch(object):
     @property
     def json_response(self):
         """Return JSON string."""
-        return self._JSON
+        return self._JSON2
 
 

@@ -25,48 +25,15 @@ s = ScopusSearch(query=q,
                  )
 
 df = json_normalize(s.json_response)
-df.to_csv('normal.csv', sep='\t', encoding='utf-8')
+df.to_csv('prima.csv', sep='\t', encoding='utf-8')
 
-def splitDataFrameList(df,target_column,separator):
-    ''' df = dataframe to split,
-    target_column = the column containing the values to split
-    separator = the symbol used to perform the split
-    returns: a dataframe with each entry for the target column separated, with each element moved into a new row.
-    The values in the other columns are duplicated across the newly divided rows.
-    '''
-    def splitListToRows(row,row_accumulator,target_column,separator):
-        split_row = str(row[target_column]).split(separator)
-        for s in split_row:
-            new_row = row.to_dict()
-            new_row[target_column] = s
-            row_accumulator.append(new_row)
-    new_rows = []
-    df.apply(splitListToRows,axis=1,args = (new_rows,target_column,separator))
-    new_df = pd.DataFrame(new_rows)
-    return new_df
-
-new = splitDataFrameList(df,'author','\t')
-new.to_csv('new.csv', sep='\t', encoding='utf-8')
+cols = df.columns.tolist()
+# losing a col, but its a duplicate. should be  cols[:14] not  cols[:13]
+cols = [cols[14]] + cols[:13] + cols[15:]
+df = df[cols]
+df.to_csv('dopo.csv', sep='\t', encoding='utf-8')
 
 
-
-# def flatten(l):
-#     out = []
-#     if isinstance(l, (list, tuple)):
-#         for item in l:
-#             out.extend(flatten(item))
-#     elif isinstance(l, (dict)):
-#         for dictkey in l.keys():
-#             out.extend(flatten(l[dictkey]))
-#     elif isinstance(l, (str, int, unicode)):
-#         out.append(l)
-#     return out
-#
-# json_2 = flatten(s.json_response)
-#
-# with open('flat.json', 'w') as f:
-#     json.dump(json_2, f, indent=4)
-#     f.close()
 
 nodes = []
 edges = {}
