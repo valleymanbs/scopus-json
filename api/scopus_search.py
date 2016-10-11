@@ -210,7 +210,6 @@ class ScopusSearch(object):
         i = 0
         while i < len(self._JSON2):
             if self._JSON2[i] == self._JSON2[(i+1)%len(self._JSON2)]:
-                print 'same {}'.format(i)
                 self._JSON2.pop(i)
             else:
                 i += 1
@@ -223,15 +222,15 @@ class ScopusSearch(object):
             f.close()
 
         for e in self._JSON2:
-
-            e['author']['afid'] = e['author']['afid'][-1]['$']
+            if 'afid' in e['author']:
+                e['author']['afid'] = e['author']['afid'][-1]['$']
+            else:
+                print e
 
             for z in e['affiliation']:
 
-
                 if z['afid'] != e['author']['afid']:
                     e['affiliation'].remove(z)
-            print e['affiliation']
             e['affiliation'] = e['affiliation'][0]
 
         JSON_DATA_FILE4 = os.path.join(QUERY_DIR, 'articles4.json')
