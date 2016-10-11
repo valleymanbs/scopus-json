@@ -224,14 +224,17 @@ class ScopusSearch(object):
         for e in self._JSON2:
             if 'afid' in e['author']:
                 e['author']['afid'] = e['author']['afid'][-1]['$']
+                for z in e['affiliation']:
+
+                    if z['afid'] != e['author']['afid']:
+                        e['affiliation'].remove(z)
+                e['affiliation'] = e['affiliation'][0]
             else:
-                print e
+                print ('WARNING: author.afid is missing. JSON data: \n\t{}\n'.format(json.dumps(e)))
+                e['author']['afid'] = ''
+                e['affiliation'] = {}
 
-            for z in e['affiliation']:
 
-                if z['afid'] != e['author']['afid']:
-                    e['affiliation'].remove(z)
-            e['affiliation'] = e['affiliation'][0]
 
         JSON_DATA_FILE4 = os.path.join(QUERY_DIR, 'articles4.json')
         with open(JSON_DATA_FILE4, 'w') as f:
