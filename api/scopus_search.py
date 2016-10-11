@@ -2,6 +2,8 @@ import requests
 # import sys
 import os
 import json
+from itertools import cycle
+
 
 
 from api_key import MY_API_KEY
@@ -160,13 +162,59 @@ class ScopusSearch(object):
                 json.dump(self._JSON, f, indent=4)
                 f.close()
 
+        print 'prima {}'.format(len(self._JSON))
+        i = 0
+        while i < len(self._JSON):
+            if 'author' not in self._JSON[i] or 'eid' not in self._JSON[i]:
+                self._JSON.pop(i)
+            else:
+                i += 1
+
+            #for a in e['author']
+        print 'dopo {}'.format(len(self._JSON))
+
+        self._JSON2 = []
+
+        for e in self._JSON:
+            for a in e['author']:
+                temp = e
+
+                temp['author'] = a
+                print temp
+                self._JSON2.append(temp)
+        #print self._JSON2
+
+
+        JSON_DATA_FILE2 = os.path.join(QUERY_DIR, 'articles2.json')
+
+
+        with open(JSON_DATA_FILE2, 'w') as f:
+            json.dump(self._JSON2, f, indent=4)
+            f.close()
+
+        self._JSON3 = []
+
+        for e in self._JSON2:
+           if
+                self._JSON3.append(temp)
+        # print self._JSON2
+
+
+        JSON_DATA_FILE3 = os.path.join(QUERY_DIR, 'articles2.json')
+
+        with open(JSON_DATA_FILE3, 'w') as f:
+            json.dump(self._JSON3, f, indent=4)
+            f.close()
+
+
         for e in self._JSON:
             if 'eid' in e:
                 self._eid_list += [str(e['eid'])]
             else:
                 print('WARNING: skipped an element, no eid. JSON data was: \n{}\n'.format(e))
             if 'author' in e and 'eid' in e:
-                self._eid_authors_dict[str(e['eid'])] = set([str(i['authid']) for i in e['author']])
+                #self._eid_authors_dict[str(e['eid'])] = set([str(i['authid']) for i in e['author']])
+                pass
             else:
                 print('WARNING: skipped an element, no eid or author. JSON data was: \n{}\n'.format(e))
             if 'affiliation' in e :
@@ -211,8 +259,13 @@ class ScopusSearch(object):
         return self._eid_authors_dict
 
     @property
+    def authors_dict(self):
+        """Return list of Authors retrieved."""
+        return self._author_dict
+
+    @property
     def json_response(self):
-        """Return JSON data."""
+        """Return JSON string."""
         return self._JSON
 
 
