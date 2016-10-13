@@ -2,9 +2,16 @@ import requests
 # import sys
 import os
 import json
+import logging
+import time
 
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
+requests_log = logging.getLogger("requests.packages.urllib3")
+requests_log.setLevel(logging.DEBUG)
+requests_log.propagate = True
 
-
+log=logging.getLogger('search')
 
 def get_next_element(my_itr):
     try:
@@ -47,13 +54,14 @@ class ScopusSearch(object):
     :type max_items: int
 
     """
-    def __init__(self, query, fields=None, view=None, items_per_query=100, max_items=2000):
+    def __init__(self, query, fields=None, view=None, items_per_query=100, max_items=5000):
         """
         ScopusSearch class initialization
         IMPORTANT: default parameters only work with a subscriber APIKey
+        IMPORTANT: ScopusSearch max results limit is 5000 :( you get HTTP 404 for more results
         Not paying users can get only 25 items per query and only STANDARD view or selected fields from a STANDARD view
         """
-        print 'ScopusSearch class initialization'
+        print '### ScopusSearch class initialization ###'
 
         if fields is None and view is None:
             print ('ERROR: You must pass the fields parameter XOR the view parameter to select the result data.\n'
@@ -74,19 +82,27 @@ class ScopusSearch(object):
         QUERY_DIR = os.path.join(SCOPUS_SEARCH_DIR,
                                  # remove any / in query to use it as a filename
                                  query.replace('/', '_slash_').replace(' ', '_'))
-        JSON_DATA_FILE = os.path.join(QUERY_DIR, 'articles.json')
+        JSON_RAW_DATA_FILE = os.path.join(QUERY_DIR, 'raw.json')
+        JSON_CLEAN_DATA_FILE = os.path.join(QUERY_DIR, 'clean.json')
+        JSON_FINAL_DATA_FILE = os.path.join(QUERY_DIR, 'FINAL.json')
+
 
         self._JSON = []
         self._json_loaded = False
 
         if not os.path.exists(QUERY_DIR):
             os.makedirs(QUERY_DIR)
-            print ('New query: creating a new directory to store JSON files at \n\t{}\n'.format(QUERY_DIR))
         else:
-            print ('This query has already been cached in the data directory. Loading json from file \n\t{}\n'.format(JSON_DATA_FILE))
-            with open(JSON_DATA_FILE) as d:
-                self._JSON = json.load(d)
-            self._json_loaded = True
+            if not os.path.exists(JSON_RAW_DATA_FILE):
+                pass
+            else:
+                print (
+                        'This query has already been cached in the data directory. '
+                        'Loading json from file \n\t{}\n'.format(JSON_RAW_DATA_FILE)
+                      )
+                with open(JSON_RAW_DATA_FILE) as d:
+                    self._JSON = json.load(d)
+                self._json_loaded = True
 
         # check if items_per_query is ok for the current request:
         # complete view max 100 items per query
@@ -109,9 +125,12 @@ class ScopusSearch(object):
         self._affil_dict = {}
         self._author_dict = {}
 
+        self.const_item_num = 0
+
         if not self._json_loaded:
             while self._found_items_num > 0:
-
+                log.info("GET from remote...")
+                start = time.time()
                 # view or fields search selection
                 if fields is not None:
                     resp = requests.get(self._url,
@@ -124,7 +143,8 @@ class ScopusSearch(object):
                                         params={'query': self._query, 'view': view, 'count': self._items_per_query,
                                                 'start': self._start_item})
 
-                print ('Current query url:\n\t{}\n'.format(resp.url))
+                #print ('Current query url:\n\t{}\n'.format(resp.url))
+                log.info("Done: %.3fs" % (time.time() - start))
 
                 if resp.status_code != 200:
                     # error
@@ -134,6 +154,8 @@ class ScopusSearch(object):
                 if self._found_items_num == 1:
                     self._found_items_num = int(resp.json().get('search-results').get('opensearch:totalResults'))
                     print ('GET returned {} articles.'.format(self._found_items_num))
+
+                self.const_item_num = self._found_items_num
 
                 if self._found_items_num == 0:
                     pass
@@ -155,9 +177,6 @@ class ScopusSearch(object):
                     if 'entry' in resp.json().get('search-results', []):
                         # add it to this json file - combination of all "entry" fields from the json payloads
                         self._JSON += resp.json()['search-results']['entry']
-                        print '####'
-                        print type(resp.json()['search-results']['entry'])
-
 
                 # set counters for the next cycle
                 self._found_items_num -= self._items_per_query
@@ -167,78 +186,67 @@ class ScopusSearch(object):
             # end while - finished downloading JSON data
 
             # write abstracts JSON to a file - combination of all "entry" fields from the json payloads got from API
-            with open(JSON_DATA_FILE, 'w') as f:
+            with open(JSON_RAW_DATA_FILE, 'w') as f:
                 json.dump(self._JSON, f, indent=4)
                 f.close()
 
-        print 'prima {}'.format(len(self._JSON))
+        # cleanup JSON, keep only consistent values with both eid and author
         i = 0
         while i < len(self._JSON):
             if 'author' not in self._JSON[i] or 'eid' not in self._JSON[i]:
+                print('WARNING: no eid or author, popping an element in self._JSON'.format(self._max_items))
                 self._JSON.pop(i)
             else:
                 i += 1
-
-
-        print 'dopo {}'.format(len(self._JSON))
-
-        self._JSON2 = []
-
-        for e in self._JSON:
-
-
-            for a in e['author']:
-                temp = e
-
-                temp['author'] = a
-                string = json.dumps(temp)
-
-                self._JSON2.append(json.loads(string))
-
-        print json.dumps(self._JSON2)
-
-
-        JSON_DATA_FILE2 = os.path.join(QUERY_DIR, 'articles2.json')
-
-
-        with open(JSON_DATA_FILE2, 'w') as f:
-            json.dump(self._JSON2, f, indent=4)
+        # save a clean.json with the valid entries
+        with open(JSON_CLEAN_DATA_FILE, 'w') as f:
+            json.dump(self._JSON, f, indent=4)
             f.close()
 
+        # begin JSON manipulation, entries will be saved in a new list
+        self._JSON_FINAL = []
 
+        for e in self._JSON:
+            temp = dict(e)
+            for a in e['author']:
+                temp['author'] = dict(a)
+                self._JSON_FINAL.append(temp)
+
+        JSON_DATA_FILE1 = os.path.join(QUERY_DIR, 'step1.json')
+        with open(JSON_DATA_FILE1, 'w') as f:
+            json.dump(self._JSON_FINAL, f, indent=4)
+            f.close()
 
         i = 0
-        while i < len(self._JSON2):
-            if self._JSON2[i] == self._JSON2[(i+1)%len(self._JSON2)]:
-                self._JSON2.pop(i)
+        while i < len(self._JSON_FINAL):
+            if self._JSON_FINAL[i] == self._JSON_FINAL[(i+1) % len(self._JSON_FINAL)]:
+                self._JSON_FINAL.pop(i)
             else:
                 i += 1
 
 
-        JSON_DATA_FILE3 = os.path.join(QUERY_DIR, 'articles3.json')
+        JSON_DATA_FILE3 = os.path.join(QUERY_DIR, 'step2.json')
 
         with open(JSON_DATA_FILE3, 'w') as f:
-            json.dump(self._JSON2, f, indent=4)
+            json.dump(self._JSON_FINAL, f, indent=4)
             f.close()
 
-        for e in self._JSON2:
+        for e in self._JSON_FINAL:
             if 'afid' in e['author']:
                 e['author']['afid'] = e['author']['afid'][-1]['$']
                 for z in e['affiliation']:
 
                     if z['afid'] != e['author']['afid']:
                         e['affiliation'].remove(z)
-                e['affiliation'] = e['affiliation'][0]
+
+                e['affiliation'] = e['affiliation'][-1]
             else:
-                print ('WARNING: author.afid is missing. JSON data: \n\t{}\n'.format(json.dumps(e)))
+                print ('WARNING: author.afid missing, filling with a blank affiliation')
                 e['author']['afid'] = ''
                 e['affiliation'] = {}
 
-
-
-        JSON_DATA_FILE4 = os.path.join(QUERY_DIR, 'articles4.json')
-        with open(JSON_DATA_FILE4, 'w') as f:
-            json.dump(self._JSON2, f, indent=4)
+        with open(JSON_FINAL_DATA_FILE, 'w') as f:
+            json.dump(self._JSON_FINAL, f, indent=4)
             f.close()
 
 
@@ -280,6 +288,10 @@ class ScopusSearch(object):
         #             f.write('{}\n'.format(eid.encode('utf-8')))
         #
         # print ('{} EIDs stored in file \n\t{}\n'.format(len(self._eid_list), out_file))
+        if self.const_item_num-len(self._JSON) > 0:
+            print 'dropped {} elements'.format(self.const_item_num-len(self._JSON))
+
+        print '\n@@@@@@ ScopusSearch completed. {} valid elements found @@@@@@\n'.format(len(self._JSON))
 
     # end __init__
 
@@ -299,8 +311,25 @@ class ScopusSearch(object):
         return self._author_dict
 
     @property
-    def json_response(self):
-        """Return JSON string."""
-        return self._JSON2
+    def valid_results_list(self):
+        """
+        Return a list containing the cleaned response
+        only valid entries (eid AND author) are listed
+        """
+        return self._JSON
+
+    @property
+    def valid_results_json(self):
+        """
+        Return JSON string containing the cleaned response
+        only valid entries (eid AND author) are listed
+        """
+        return json.dumps(self._JSON)
+
+
+    @property
+    def json_final_str(self):
+        """Return JSON string of the final output"""
+        return json.dumps(self._JSON_FINAL)
 
 

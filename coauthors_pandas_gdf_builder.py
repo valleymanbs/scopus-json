@@ -24,7 +24,7 @@ s = ScopusSearch(query=q,
                  view='COMPLETE'
                  )
 #carica pandas dataframe
-df = json_normalize(s.json_response)
+df = json_normalize(s.json_final_str)
 df.to_csv('prima.csv', sep='\t', encoding='utf-8')
 
 cols = df.columns.tolist()
