@@ -8,21 +8,22 @@ from pandas.io.json import json_normalize
 import json
 
 parser = argparse.ArgumentParser()
-parser.add_argument("keys", help='search keys surrounded by quotation marks, e.g. \'neural network\'')
-parser.add_argument("year", help='Starting year, e.g. 2016')
-parser.add_argument("num", help='Number of items to get in a single query, 25, 100 or 200')
+parser.add_argument("folder", help='name of the folder inside data/joined_searches/ where the clean.json file is located')
 args = parser.parse_args()
 
-q = 'TITLE-ABS-KEY({args.keys}) AND PUBYEAR > {args.year}'.format(args=args)
-QUERY_DIR = os.path.join(q.replace('/', '_slash_').replace(' ', '_'))
+DATA_DIR = os.path.abspath('data/joined_searches')
+DATA_FILE = os.path.join(DATA_DIR, args.folder, 'clean.json')
 
-keyword_results_list = ScopusSearch(query=q,
-                                    items_per_query=int(args.num),
-                                    view='COMPLETE',  # ONLY STANDARD AT HOME; need complete to get authors data!
-                                    ).valid_results_list
+OUTPUT_DIR = os.path.abspath('joined_{}'.format(args.folder.replace('/', '_slash_')))
 
+keyword_results_list = []
 keyword_eid_author_dict = {}
 cited_eid_list = []
+
+
+with open(DATA_FILE) as f:
+    keyword_results_list += json.load(f)
+    f.close()
 
 missing_n = 0
 
@@ -61,7 +62,7 @@ for eid in cited_eid_list:
     citations_search_dict[eid] = json.loads(
                                             ScopusSearch(
                                                 query='REFEID({})'.format(eid),
-                                                items_per_query=int(args.num),
+                                                items_per_query=100,
                                                 view='COMPLETE' # ONLY STANDARD AT HOME
                                                         ).valid_results_json
                                             )
@@ -134,7 +135,7 @@ nodes1 = []
 for k,v,y in (x.split(',') for x in nodes):
     nodes1 += [{'id':k,'name':v,'afid':y}]
 
-NODES_CSV = os.path.join(QUERY_DIR, 'nodes_{}.csv'.format(time.strftime("%d%m%Y_%H%M%S")))
+NODES_CSV = os.path.join(OUTPUT_DIR, 'nodes_{}.csv'.format(time.strftime("%d%m%Y_%H%M%S")))
 df_nodes = json_normalize(nodes1)
 df_nodes.to_csv('nodes.csv', sep=',', encoding='utf-8')
 
@@ -168,11 +169,11 @@ for k in edges:
 
 print 'Generated {} edges for {} articles with citations'.format(edges_n,len(edges))
 
-if not os.path.exists(QUERY_DIR):
-    os.makedirs(QUERY_DIR)
-    print ('New query: creating a new directory to store .gdf results \n\t{}\n'.format(QUERY_DIR))
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
+    print ('New query: creating a new directory to store .gdf results \n\t{}\n'.format(OUTPUT_DIR))
 
-GDF_OUTPUT_FILE = os.path.join(QUERY_DIR, 'citations_{}.gdf'.format(time.strftime("%d%m%Y_%H%M%S")))
+GDF_OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'citations_{}.gdf'.format(time.strftime("%d%m%Y_%H%M%S")))
 
 
 with open(GDF_OUTPUT_FILE, 'w') as f:
