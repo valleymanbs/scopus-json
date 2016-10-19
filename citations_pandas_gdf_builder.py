@@ -14,7 +14,7 @@ parser.add_argument("num", help='Number of items to get in a single query, 25, 1
 args = parser.parse_args()
 
 q = 'TITLE-ABS-KEY({args.keys}) AND PUBYEAR > {args.year}'.format(args=args)
-QUERY_DIR = os.path.join(q.replace('/', '_slash_').replace(' ', '_'))
+QUERY_DIR = os.path.join('output',q.replace('/', '_slash_').replace(' ', '_'))
 
 keyword_results_list = ScopusSearch(query=q,
                                     items_per_query=int(args.num),

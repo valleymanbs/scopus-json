@@ -23,7 +23,7 @@ join_list = [queries_list[int(i)] for i in join_str.split(',') if int(i) in rang
 
 for i in join_list:
     print 'Join query {}'.format(i)
-    JSON_DATA_FILE = os.path.join(SCOPUS_SEARCH_DIR, i, 'clean.json')
+    JSON_DATA_FILE = os.path.join(SCOPUS_SEARCH_DIR, i.replace(' ', '_'), 'clean.json')
     # load results list from a previously saved JSON data file
     with open(JSON_DATA_FILE) as data:
         combined_results_list += json.load(data)
@@ -39,10 +39,11 @@ with open(OUTPUT_FILE, 'w') as f:
     f.close()
 
 INFO_FILE = os.path.join(OUTPUT_DIR, 'README')
-with open(INFO_FILE,'w'):
+with open(INFO_FILE,'w') as f:
     f.write('Queries joined in clean.json:\n\n')
     for i in join_list:
         if sys.version_info[0] == 3:
-            f.write('i\n')
+            f.write('{}\n'.format(i))
         else:
-            f.write('i\n'.encode('utf-8'))
+            f.write('{}\n'.format(i).encode('utf-8'))
+    f.close()

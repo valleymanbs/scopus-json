@@ -112,19 +112,28 @@ class ScopusAuthorRetrieval(object):
                 f.close()
 
         # endif
-        # json loaded, fill the attributes
-        if 'coredata' in self._JSON.get('abstracts-retrieval-response', []):
-            coredata = self._JSON.get('abstracts-retrieval-response', [])['coredata']
-            if 'prism:coverDate' in coredata:
-                self._date = coredata['prism:coverDate']
-            if 'dc:title' in coredata:
-                self._title = coredata['dc:title']
-            if 'prism:publicationName' in coredata:
-                self._publication = coredata['prism:publicationName']
-            if 'dc:description' in coredata:
-                self._description = coredata['dc:description']
-        if 'authors' in self._JSON.get('abstracts-retrieval-response', []):
-            self._authors = self._JSON.get('abstracts-retrieval-response', [])['authors']['author']
+        # json loaded, fill the attributes ['afid', 'affilname', 'affiliation-city', 'affiliation-country']
+
+        self._afid = ''
+        self._affilname = ''
+        self._affilcountry = ''
+        self._affilcity = ''
+
+        if 'author-profile' in self._JSON.get('author-retrieval-response', [])[0]:
+            profile = self._JSON.get('author-retrieval-response', [])[0]['author-profile']
+            if 'affiliation-current' in profile:
+                affiliation = profile['affiliation-current']['affiliation']['ip-doc']
+                if '@id' in affiliation:
+                    self._afid = affiliation['@id']
+                if 'afdispname' in affiliation:
+                    self._affilname = affiliation['afdispname']
+                if 'address' in affiliation:
+                    address = affiliation['address']
+                    if 'country' in address:
+                        self._affilcountry = address['country']
+                    if 'city' in address:
+                        self._affilcity = address['city']
+
 
 
     @property
@@ -134,30 +143,24 @@ class ScopusAuthorRetrieval(object):
 
 
     @property
-    def title(self):
+    def afid(self):
         """Abstract title."""
-        return self._title.encode('utf-8')
+        return self._afid.encode('utf-8')
 
     @property
-    def description(self):
+    def affilname(self):
         """Abstract title."""
-        return self._description.encode('utf-8')
+        return self._affilname.encode('utf-8')
 
     @property
-    def publication_name(self):
+    def affilcountry(self):
         """Name of source the abstract is published in."""
-        return self._publication
+        return self._affilcountry.encode('utf-8')
 
     @property
-    def cover_date(self):
+    def affilcity(self):
         """The date of the cover the abstract is in."""
-        return self._date.encode('utf-8')
-
-    @property
-    def authors_list(self):
-        """A list of authors id"""
-        return self._authors
-
+        return self._affilcity.encode('utf-8')
 
     @property
     def json_response(self):

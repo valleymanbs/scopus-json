@@ -35,7 +35,7 @@ print ('{} nodes'.format(len(nodes)))
 print ('{} edges'.format(len(edges)))
 # create .gdf
 # dump the list to a file, one EID per line
-QUERY_DIR = os.path.join(q.replace('/', '_slash_').replace(' ', '_'))
+QUERY_DIR = os.path.join('output',q.replace('/', '_slash_').replace(' ', '_'))
 
 if not os.path.exists(QUERY_DIR):
     os.makedirs(QUERY_DIR)

@@ -214,6 +214,8 @@ class ScopusSearch(object):
 
         search_log.info("Results cleaned and written to file in %.3fs" % (time.time() - start))
 
+        # TODO: MOVE OUTSIDE CLASS
+
         search_log.info("2nd Cleanup...")
         start = time.time()
 
@@ -270,6 +272,7 @@ class ScopusSearch(object):
 
         search_log.info("2nd cleanup done in %.3fs" % (time.time() - start))
 
+        # END TODO MOVE OUTSIDE CLASS
 
 
         # for e in self._JSON:
