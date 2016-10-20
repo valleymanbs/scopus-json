@@ -55,21 +55,21 @@ class ScopusSearch(object):
         IMPORTANT: ScopusSearch max results limit is 5000 :( you get HTTP 404 for more results
         Not paying users can get only 25 items per query and only STANDARD view or selected fields from a STANDARD view
         """
-        print '### ScopusSearch class initialization with query {} ###'.format(query)
+        search_log.info('ScopusSearch class initialization with query {}'.format(query))
 
         if fields is None and view is None:
-            print ('ERROR: You must pass the fields parameter XOR the view parameter to select the result data.\n'
+            search_log.error('You must pass the fields parameter XOR the view parameter to select the result data.\n'
                    'Check ScopusSearch class documentation for more info.'
                    )
             quit()
         if fields is not None and view is not None:
-            print ('WARN: You passed both the fields parameter and the view parameter. Fields search will be used.\n'
+            search_log.warn('You passed both the fields parameter and the view parameter. Fields search will be used.\n'
                    'Check ScopusSearch class documentation for more info.'
                    )
 
         if not os.path.exists(SCOPUS_SEARCH_DIR):
             os.makedirs(SCOPUS_SEARCH_DIR)
-            print ('Search data directory not found, created a new one at \n\t{}\n'.format(SCOPUS_SEARCH_DIR))
+            search_log.info('Search data directory not found, created a new one at \n\t{}\n'.format(SCOPUS_SEARCH_DIR))
 
         # check if items_per_query is ok for the current request:
         # complete view max 100 items per query
@@ -115,7 +115,7 @@ class ScopusSearch(object):
             if not os.path.exists(_JSON_RAW_DATA_FILE):
                 pass
             else:
-                print (
+                search_log.info(
                         'This query has already been cached in the data directory. '
                         'Loading json from file \n\t{}\n'.format(_JSON_RAW_DATA_FILE)
                       )
@@ -216,61 +216,61 @@ class ScopusSearch(object):
 
         # TODO: MOVE OUTSIDE CLASS
 
-        search_log.info("2nd Cleanup...")
-        start = time.time()
-
-        # begin JSON manipulation, entries will be saved in a new list
-        self._JSON_FINAL = []
-
-        for e in self._combined_results_list:
-            temp = dict(e)
-            for a in e['author']:
-                temp['author'] = dict(a)
-                self._JSON_FINAL.append(temp)
-
-        JSON_DATA_FILE1 = os.path.join(_QUERY_DIR, 'step1.json')
-        with open(JSON_DATA_FILE1, 'w') as f:
-            json.dump(self._JSON_FINAL, f, indent=4)
-            f.close()
-
-        i = 0
-        while i < len(self._JSON_FINAL):
-            if self._JSON_FINAL[i] == self._JSON_FINAL[(i+1) % len(self._JSON_FINAL)]:
-                self._JSON_FINAL.pop(i)
-            else:
-                i += 1
-
-
-        JSON_DATA_FILE3 = os.path.join(_QUERY_DIR, 'step2.json')
-
-        with open(JSON_DATA_FILE3, 'w') as f:
-            json.dump(self._JSON_FINAL, f, indent=4)
-            f.close()
-
-        missing_n = 0
-
-        for e in self._JSON_FINAL:
-            if 'afid' in e['author']:
-                e['author']['afid'] = e['author']['afid'][-1]['$']
-                for z in e['affiliation']:
-
-                    if z['afid'] != e['author']['afid']:
-                        e['affiliation'].remove(z)
-
-                e['affiliation'] = e['affiliation'][-1]
-            else:
-                missing_n += 1
-                e['author']['afid'] = ''
-                e['affiliation'] = {}
-
-        if missing_n > 0:
-            search_log.warn('Found {} authors with missing affiliation, filling with null'.format(missing_n))
-
-        with open(_JSON_FINAL_DATA_FILE, 'w') as f:
-            json.dump(self._JSON_FINAL, f, indent=4)
-            f.close()
-
-        search_log.info("2nd cleanup done in %.3fs" % (time.time() - start))
+#        search_log.info("2nd Cleanup...")
+#        start = time.time()
+#
+#        # begin JSON manipulation, entries will be saved in a new list
+#        self._JSON_FINAL = []
+#
+#        for e in self._combined_results_list:
+#            temp = dict(e)
+#            for a in e['author']:
+#                temp['author'] = dict(a)
+#                self._JSON_FINAL.append(temp)
+#
+#        JSON_DATA_FILE1 = os.path.join(_QUERY_DIR, 'step1.json')
+#        with open(JSON_DATA_FILE1, 'w') as f:
+#            json.dump(self._JSON_FINAL, f, indent=4)
+#            f.close()
+#
+#        i = 0
+#        while i < len(self._JSON_FINAL):
+#            if self._JSON_FINAL[i] == self._JSON_FINAL[(i+1) % len(self._JSON_FINAL)]:
+#                self._JSON_FINAL.pop(i)
+#            else:
+#                i += 1
+#
+#
+#        JSON_DATA_FILE3 = os.path.join(_QUERY_DIR, 'step2.json')
+#
+#        with open(JSON_DATA_FILE3, 'w') as f:
+#            json.dump(self._JSON_FINAL, f, indent=4)
+#            f.close()
+#
+#        missing_n = 0
+#
+#        for e in self._JSON_FINAL:
+#            if 'afid' in e['author']:
+#                e['author']['afid'] = e['author']['afid'][-1]['$']
+#                for z in e['affiliation']:
+#
+#                    if z['afid'] != e['author']['afid']:
+#                        e['affiliation'].remove(z)
+#
+#                e['affiliation'] = e['affiliation'][-1]
+#            else:
+#                missing_n += 1
+#                e['author']['afid'] = ''
+#                e['affiliation'] = {}
+#
+#        if missing_n > 0:
+#            search_log.warn('Found {} authors with missing affiliation, filling with null'.format(missing_n))
+#
+#        with open(_JSON_FINAL_DATA_FILE, 'w') as f:
+#            json.dump(self._JSON_FINAL, f, indent=4)
+#            f.close()
+#
+#        search_log.info("2nd cleanup done in %.3fs" % (time.time() - start))
 
         # END TODO MOVE OUTSIDE CLASS
 
@@ -353,10 +353,10 @@ class ScopusSearch(object):
         """
         return json.dumps(self._combined_results_list)
 
-    @property
-    def json_final_str(self):
-        """Return JSON string of the final output"""
-        return json.dumps(self._JSON_FINAL)
+#    @property
+#    def json_final_str(self):
+#        """Return JSON string of the final output"""
+#        return json.dumps(self._JSON_FINAL)
 
     @property
     def results_n(self):
