@@ -14,7 +14,7 @@ requests_log = logging.getLogger(" requests.packages.urllib3 ")
 requests_log.setLevel(logging.DEBUG)
 requests_log.propagate = True
 
-search_log = logging.getLogger(' ScopusSearch ')
+
 
 SCOPUS_SEARCH_DIR = os.path.abspath('data/search')
 
@@ -48,13 +48,19 @@ class ScopusSearch(object):
     :type max_items: int
 
     """
-    def __init__(self, query, fields=None, view=None, items_per_query=100, max_items=5000):
+    def __init__(self, query, fields=None, view=None, items_per_query=100, max_items=5000, no_log=False):
         """
         ScopusSearch class initialization
         IMPORTANT: default parameters only work with a subscriber APIKey
         IMPORTANT: ScopusSearch max results limit is 5000 :( you get HTTP 404 for more results
         Not paying users can get only 25 items per query and only STANDARD view or selected fields from a STANDARD view
         """
+        search_log = logging.getLogger(' ScopusSearch.{} '.format(query))
+        
+        if no_log:
+            search_log.setLevel(logging.WARNING)
+            requests_log.setLevel(logging.WARNING)
+        
         search_log.info('ScopusSearch class initialization with query {}'.format(query))
 
         if fields is None and view is None:
