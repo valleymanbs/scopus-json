@@ -11,6 +11,6 @@ args = parser.parse_args()
 q = args.query
 
 ScopusSearch(query=q,
-             items_per_query=100,
+             items_per_query=25,
              view='COMPLETE',  # ONLY STANDARD AT HOME; need complete to get authors data!
              )
