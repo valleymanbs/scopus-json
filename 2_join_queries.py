@@ -11,9 +11,9 @@ folders_list = os.listdir(SCOPUS_SEARCH_DIR)
 queries_list = [x.replace('_',' ') for x in folders_list if "REFEID" not in x and '.' not in x]
 
 for i in range(len(queries_list)):
-    print '{}\t-->\t{}\t'.format(i, queries_list[i])
+    print('{}\t-->\t{}\t'.format(i, queries_list[i]))
 
-join_str = raw_input('Please type the list of queries to join (indexes, comma-separated: i.e. \'1,2,4,12\'):')
+join_str = input('Please type the list of queries to join (indexes, comma-separated: i.e. \'1,2,4,12\'):')
 
 for i in join_str.split(','):
     if int(i) not in range(len(queries_list)):
@@ -22,7 +22,7 @@ for i in join_str.split(','):
 join_list = [queries_list[int(i)] for i in join_str.split(',') if int(i) in range(len(queries_list))]
 
 for i in join_list:
-    print 'Join query {}'.format(i)
+    print('Join query {}'.format(i))
     JSON_DATA_FILE = os.path.join(SCOPUS_SEARCH_DIR, i.replace(' ', '_'), 'clean.json')
     # load results list from a previously saved JSON data file
     with open(JSON_DATA_FILE) as data:

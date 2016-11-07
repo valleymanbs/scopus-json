@@ -104,11 +104,14 @@ keywords_df.to_csv('debug/keyword_clean.csv', sep=',', encoding='utf-8') # save 
 author_series = keywords_df.apply(lambda x: pd.Series(x['author']), axis=1).stack().reset_index(level=1, drop=True)
 author_series.name = 'author'
 
+# eid_author_df for classification
 eid_author_df = keywords_df.drop('author', axis=1).join(author_series)
 eid_author_df = eid_author_df[["eid", "dc:title", "dc:description", "authkeywords", "author"]]
 # author column is a dict, unpack it into many columns
 eid_author_df = pd.concat([ eid_author_df.drop(['author'], axis=1), eid_author_df['author'].apply(pd.Series)['authid'] ], axis=1).drop_duplicates(subset=['eid', 'authid'])
 eid_author_df.to_csv('debug/eid_author_df.csv', sep=',', encoding='utf-8')
+eid_author_df.groupby('authid').agg(lambda x: x.tolist())
+eid_author_df.to_csv('debug/eid_author_df2.csv', sep=',', encoding='utf-8')
 
 # Series of dicts to list of dicts and then to a dataframe; also drop duplicates in the end
 authors = pd.DataFrame(list(author_series)).drop_duplicates(subset=['authid'])
@@ -190,7 +193,7 @@ script_log.info("Itertuples completed in %.3fs" % (time.time() - start))
 
 
 start = time.time()
-ddf = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in citations_search_dict.iteritems() ]))
+ddf = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in citations_search_dict.items() ]))
 ddf = ddf.transpose().stack().reset_index(level=1, drop=True)
 new_df = ddf.to_frame()
 new_df.reset_index(level=0, inplace=True)

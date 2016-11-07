@@ -27,18 +27,18 @@ def write_file(line):
         
 
 
-with open(NODES_CSV, 'rb') as nodes:
+with open(NODES_CSV, 'rt') as nodes:
     reader = csv.reader(nodes)
-    header = reader.next()
+    header = next(reader)
     write_file('nodedef>name VARCHAR,'+' VARCHAR, '.join(header[2:]) +' VARCHAR')
     #print ', '.join(header[1:])
     for row in reader:
         write_file(', '.join('"{}"'.format(i.replace(',',';')) for i in row[1:]))
     nodes.close()
     
-with open(EDGES_CSV, 'rb') as edges:
+with open(EDGES_CSV, 'rt') as edges:
     reader = csv.reader(edges)
-    header = reader.next()
+    header = next(reader)
     write_file('edgedef>node1 VARCHAR, node2 VARCHAR, '+' VARCHAR, '.join(header[3:-1]) + ' VARCHAR, directed BOOLEAN')
     #print ', '.join(header[1:])
     for row in reader:

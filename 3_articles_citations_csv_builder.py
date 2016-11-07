@@ -19,7 +19,8 @@ import json
 # log config
 logging.basicConfig()
 logging.getLogger().setLevel(logging.DEBUG)
-script_log = logging.getLogger(' %s:%s:%s CitationsGraphBuilder' % (time.localtime().tm_hour,time.localtime().tm_min,time.localtime().tm_sec))
+script_log = logging.getLogger(' CitationsGraphBuilder ')
+script_log.info("Script started")
 
 # parse arguments from terminal  
 parser = argparse.ArgumentParser()
@@ -124,7 +125,7 @@ for row in with_cit.drop_duplicates('eid').itertuples():
 script_log.info("Citing articles search completed in %.3fs" % (time.time() - start))
 
 # create a dataframe from the citations_search_dict
-ddf = pd.DataFrame(dict([(k,pd.Series(v)) for k,v in citations_search_dict.iteritems()]))
+ddf = pd.DataFrame(dict([(k,pd.Series(v)) for k,v in citations_search_dict.items()]))
 ddf = ddf.transpose().stack().reset_index(level=1, drop=True)
 # create citing articles dataframe
 citing_df = ddf.to_frame()

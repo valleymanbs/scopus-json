@@ -3,7 +3,7 @@ import sys
 import os
 import json
 
-from api_key import MY_API_KEY
+from api.api_key import MY_API_KEY
 
 SCOPUS_AUTHOR_DIR = os.path.abspath('data/author')
 
@@ -34,7 +34,7 @@ class ScopusAuthorRetrieval(object):
 
     def __init__(self, authid, fields=None, view=None):
 
-        print 'ScopusAuthorRetrieval class initialization'
+        print ('ScopusAuthorRetrieval class initialization')
 
         if fields is None and view is None:
             print ('ERROR: You must pass the fields parameter XOR the view parameter to select the result data.\n'

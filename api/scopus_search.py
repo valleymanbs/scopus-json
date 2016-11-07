@@ -5,7 +5,7 @@ import json
 import logging
 import time
 
-from api_key import MY_API_KEY
+from api.api_key import MY_API_KEY
 
 # logging utility configuration
 logging.basicConfig()

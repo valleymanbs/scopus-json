@@ -3,7 +3,7 @@ import sys
 import os
 import json
 
-from api_key import MY_API_KEY
+from api.api_key import MY_API_KEY
 
 SCOPUS_ABSTRACT_DIR = os.path.abspath('data/abstract')
 
@@ -34,7 +34,7 @@ class ScopusAbstractRetrieval(object):
 
     def __init__(self, eid, fields=None, view=None):
 
-        print 'ScopusAbstractRetrieval class initialization'
+        print ('ScopusAbstractRetrieval class initialization')
 
         if fields is None and view is None:
             print ('ERROR: You must pass the fields parameter XOR the view parameter to select the result data.\n'
