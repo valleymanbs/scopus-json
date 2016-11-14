@@ -91,7 +91,6 @@ class ScopusSearch(object):
         _QUERY_DIR = os.path.join(SCOPUS_SEARCH_DIR, query.replace('/', '_slash_').replace(' ', '_'))
         _JSON_RAW_DATA_FILE = os.path.join(_QUERY_DIR, 'raw.json')
         _JSON_CLEAN_DATA_FILE = os.path.join(_QUERY_DIR, 'clean.json')
-        _JSON_FINAL_DATA_FILE = os.path.join(_QUERY_DIR, 'FINAL.json')
 
         # data from the single queries will be combined here
         self._combined_results_list = []

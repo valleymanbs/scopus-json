@@ -8,7 +8,6 @@ CSVs are nodes (articles) and edges (citations) of the graph
 
 import argparse
 from api.scopus_search import ScopusSearch
-from api.scopus_author_retrieval import ScopusAuthorRetrieval
 import os
 import logging
 import time
@@ -166,4 +165,3 @@ nodes_df.to_csv(NODES_CSV, sep=',', encoding='utf-8')
 edges_df.to_csv(EDGES_CSV, sep=',', encoding='utf-8')
 
 script_log.info("OK. ALL DONE. Script terminated.")
-quit()
