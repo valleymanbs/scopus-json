@@ -10,7 +10,7 @@ import numpy as np
 
 #csv.field_size_limit(sys.maxsize)
 
-text_df = pd.read_csv("output/sentiment_analysis/authors_citations/ok/textblob.csv")
+text_df = pd.read_csv("output/troll_detection/authors_citations/ok/textblob.csv")
 text_df = text_df.reindex(columns=['authid','text'])
 
 
@@ -23,7 +23,7 @@ X_df = pd.DataFrame(X.todense())
 
 output_df = text_df[['authid']].join(pd.DataFrame(X.todense()))
 #output_df.to_csv('debug/output_df.csv', sep=',', encoding='utf-8')
-true_k = 8
+true_k = 4
 km = KMeans(n_clusters=true_k, init='k-means++', max_iter=300, n_init=1,
                 verbose=1)
 km.fit(X)
