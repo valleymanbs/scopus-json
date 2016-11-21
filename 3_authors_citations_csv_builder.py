@@ -57,6 +57,8 @@ NODES_CSV = os.path.join(OUTPUT_DIR, 'nodes.csv')
 EDGES_CSV = os.path.join(OUTPUT_DIR, 'edges.csv')
 TEXTBLOB_CSV = os.path.join(OUTPUT_DIR, 'textblob.csv')
 
+ITEMS_PER_QUERY=25
+
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
@@ -179,7 +181,7 @@ for row in with_cit_authid_eid.drop_duplicates('eid').itertuples():
     eid = row[2]
 
     citations_search_dict[eid] = ScopusSearch(query='REFEID({})'.format(eid),
-                                              items_per_query=100,
+                                              items_per_query=ITEMS_PER_QUERY,
                                               view='COMPLETE', # ONLY STANDARD AT HOME
                                               no_log=True
                                               ).valid_results_list

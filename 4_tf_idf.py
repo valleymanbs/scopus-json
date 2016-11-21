@@ -42,18 +42,12 @@ for i in range(true_k):
     for ind in order_centroids[i, :10]:
         print (' {}'.format(terms[ind]))
         
-LABEL_COLOR_MAP = {0 : 'r',
-                   1 : 'k',
-                   2 : 
-                   }
-        
-
 
 
 
 pca =  PCA(n_components=2).fit(X.todense())
 data2D = pca.transform(X.todense())
-colormap = numpy.array(['red', 'lime', 'black', 'blue','purple','cyan','orange','pink'])
+colormap = np.array(['red', 'lime', 'black', 'blue','purple','cyan','orange','pink'])
 
 plt.scatter(data2D[:,0], data2D[:,1], c=colormap[km.labels_])
 plt.show() 
