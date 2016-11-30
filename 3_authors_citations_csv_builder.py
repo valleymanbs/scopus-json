@@ -280,21 +280,17 @@ eid_author_df = eid_author_df[["eid", "author", "dc:title", "dc:description", "a
 # author column is a dict, unpack it into many columns
 eid_author_df = pd.concat([ eid_author_df.drop(['author'], axis=1), eid_author_df['author'].apply(pd.Series)['authid'] ], axis=1).drop_duplicates(subset=['eid', 'authid'])
 eid_author_df.to_csv('debug/eid_author_df.csv', sep=',', encoding='utf-8')
-eid_author_df = pd.concat([eid_author_df, new_df], axis=0).fillna('')
-
+eid_author_df = pd.concat([eid_author_df, new_df], axis=0).fillna(' ');
+eid_author_df['text'] = eid_author_df['dc:title'] + ' ' + eid_author_df['dc:description'].apply(str) + ' ' + eid_author_df['authkeywords']
+eid_author_df = eid_author_df[["authid", "text"]]
 #eid_author_df.to_csv('debug/eid_author_df1.csv', sep=',', encoding='utf-8')
 eid_author_df = eid_author_df.groupby('authid').agg(lambda x: ' '.join(x.tolist())).reset_index()
 #eid_author_df.to_csv('debug/eid_author_df2.csv', sep=',', encoding='utf-8')
 
-eid_author_df['text'] = eid_author_df['dc:title'] + ' ' + eid_author_df['dc:description'] + ' ' + eid_author_df['authkeywords']
-
-eid_author_df = eid_author_df[["authid", "text"]]
-eid_author_df=eid_author_df.set_index(['authid'])
 eid_author_df.to_csv(TEXTBLOB_CSV, sep=',', encoding='utf-8')
 script_log.info('Authors textblobs written to CSV file.')
 
 script_log.info("Script terminated")
 
 
-#eid_author_df['text'] = eid_author_df['text'].apply(str)
 

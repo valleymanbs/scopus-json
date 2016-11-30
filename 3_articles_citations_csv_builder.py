@@ -115,7 +115,7 @@ for row in with_cit.drop_duplicates('eid').itertuples():
     eid = row[1]
 
     citations_search_dict[eid] = ScopusSearch(query='REFEID({})'.format(eid),
-                                              items_per_query=100,
+                                              items_per_query=25,
                                               view='COMPLETE', # ONLY STANDARD AT HOME
                                               no_log=True
                                               ).valid_results_list
